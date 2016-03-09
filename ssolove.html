@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<style>
+	.box{ width: 30px; height: 30px; border: 1px solid #ccc; float: left; text-align: center; vertical-align: center; line-height: 30px; font-size: 20px;}
+	.newRow{ clear: both;}
+	.top{border-top: 1px solid black;}
+	.bottom{border-bottom: 1px solid black;}
+	.left{border-left: 1px solid black;}
+	.right{border-right: 1px solid black;}
+	</style>
+</head>
+<body>
+
+
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+	<script>
+		var s = [
+					0,0,0,0,2,0,0,0,0,
+					0,7,4,8,0,0,0,0,0,
+					0,2,0,5,0,0,0,0,0,
+					0,3,8,4,0,0,0,0,0,
+					1,0,0,0,0,0,0,0,8,
+					0,0,0,0,0,6,7,2,0,
+					0,0,0,0,0,4,0,1,0,
+					0,0,0,0,0,1,6,5,0,
+					0,0,0,0,7,0,0,0,0
+			];
+
+			/*[
+					 0,0,4,9,0,0,0,0,5,
+					 0,1,0,0,7,0,0,6,0,
+					 0,9,0,0,3,0,8,0,0,
+					 0,0,3,6,0,0,0,0,0,
+					 0,0,0,0,0,0,0,0,0,
+					 0,0,0,0,0,1,2,0,0,
+					 0,0,7,0,4,0,0,3,0,
+					 0,2,0,0,9,0,0,8,0,
+					 8,0,0,0,0,5,6,0,0 
+			];*/
+
+			var found, solvedBoxes;
+	function showHTML(){
+		var html = $(document.createElement('div'));
+		for(var i=0; i<9; i++){
+			for(var j=0; j<9; j++){
+				var box = $(document.createElement('div'));
+				box.addClass('box');
+				if(j===0){box.addClass('newRow');}
+				if(i%3===0){box.addClass('top');}
+				if(i%3===2){box.addClass('bottom');}
+				if(j%3===0){box.addClass('left');}
+				if(j%3===2){box.addClass('right');}
+				var num=s[(i*9)+j];
+				if(num>0){box.text(num);}
+				html.append(box);
+			}
+		}
+		$('body').append(html);
+	}
+
+
+	function getRow(num, grid, numOnly){
+		var ret=[];
+		var g = grid.slice(num*9,(num*9)+9);
+		if(!numOnly){ return g; }
+		for(var i=0;i<g.length;i++){
+			if(typeof g[i]==="number"){
+				ret.push(g[i])
+			}
+		}
+		return ret;
+	}
+	function getCol(num, grid, numOnly){
+		var ret = [];
+		for(var i=0;i<9; i++){
+			ret.push(grid[(num)+(i*9)])
+		}
+		return ret;
+	}
+	function getBox(num, grid, numOnly){
+		var ret = [], start=(Math.floor(num/3)*27)+((num%3)*3);
+		for(var i=0;i<3; i++){
+			for(var j=0;j<3; j++){
+				ret.push(grid[start+(i*9)+j]);
+			}
+		}
+		return ret;
+	}
+	function getSqPos(i){
+		return {
+			row : Math.floor(i/9),
+			col : i%9,
+			box : (Math.floor(i/27)*3)+(Math.floor((i%9)/3))
+		}
+	}
+
+	function scanInit(grid){
+		for(var i=0; i<grid.length; i++){
+			if(!grid[i]){
+				var thisSq=getSqPos(i);
+				grid[i] = _.difference([1, 2, 3, 4, 5, 6, 7, 8, 9], _.union(getRow(thisSq.row,grid), getCol(thisSq.col,grid), getBox(thisSq.box,grid)));	
+				$('.box').eq(i).attr('title', grid[i]); 
+			}
+
+		}
+	}
+
+	function update(){
+		showHTML();
+		scanInit(s);
+		scan2();
+	}
+
+function scan2(){
+	var audit = [];
+	for(var i=0; i<9; i++){
+		audit.push({
+			r : uniquesInRow(i,s),
+			c : uniquesInCol(i,s),
+			b : uniquesInBox(i,s)
+		});
+	}
+
+	found = [];
+
+	for(var i=0; i<9; i++){
+		for(var j=0; j<9; j++){
+			if(audit[i].r[j]===1){
+				found.push({r:i, n:j});		
+			}
+			if(audit[i].c[j]===1){
+				found.push({c:i, n:j});		
+			}
+			if(audit[i].b[j]===1){
+				found.push({b:i, n:j});		
+			}
+		}
+	}
+
+	solvedBoxes = [];
+
+	for(var i=0; i<found.length; i++){
+		if(found[i].r){
+			solvedBoxes.push(findInRow(found[i].r,found[i].n));
+		}
+		if(found[i].c){
+			solvedBoxes.push(findInCol(found[i].c,found[i].n));
+		}
+		if(found[i].b){
+			solvedBoxes.push(findInBox(found[i].b,found[i].n));
+		}
+	}
+
+}
+
+	function findInBox(i,n){
+		var f = false;
+		var d= getBox(i,s);
+		for(var j=0;j<9; j++){
+			if(Array.isArray(d[j]) && d[j].indexOf(n)>-1){
+				f=j;
+				break;
+			}
+		}
+		f=(i%3*3)+(Math.floor(i/3)*27)+(Math.floor(f/3)*9)+(f%3);
+		return { box: f, num: n, from: 'b' }
+	}
+
+	function findInRow(i,n){
+		var f = false;
+		for(var j=0;j<9; j++){
+			if(Array.isArray(s[(i*9)+j]) && s[(i*9)+j].indexOf(n)>-1){
+				f=(i*9)+j;
+				break;
+			}
+		}
+		return { box: f, num: n }
+	}
+
+	function findInCol(i,n){
+		var f = false;
+		for(var j=0;j<9; j++){
+			if(Array.isArray(s[i+(j*9)]) && s[i+(j*9)].indexOf(n)>-1){
+				f=i+(j*9);
+				break;
+			}
+		}
+		return { box: f, num: n }
+	}
+
+	function uniquesInRow(n,grid){
+		var p = [];
+		var d = getRow(n, grid);
+		for(var i=0; i<d.length; i++){
+			if(Array.isArray(d[i])){
+				p = p.concat(d[i]);
+			}
+		}
+		return _.countBy(p);
+	}
+	function uniquesInCol(n,grid){
+		var p = [];
+		var d = getCol(n, grid);
+		for(var i=0; i<d.length; i++){
+			if(Array.isArray(d[i])){
+				p = p.concat(d[i]);
+			}
+		}
+		return _.countBy(p);
+	}
+	function uniquesInBox(n,grid){
+		var p = [];
+		var d = getBox(n, grid);
+		for(var i=0; i<d.length; i++){
+			if(Array.isArray(d[i])){
+				p = p.concat(d[i]);
+			}
+		}
+		return _.countBy(p);
+	}
+
+	</script>
+
+</body>
+</html>
