@@ -9,6 +9,7 @@
 	.bottom{border-bottom: 1px solid black;}
 	.left{border-left: 1px solid black;}
 	.right{border-right: 1px solid black;}
+	.known{background: yellow;}
 	</style>
 </head>
 <body>
@@ -18,7 +19,7 @@
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 	<script>
-		var s = [
+		var s = /*[
 					0,0,0,0,2,0,0,0,0,
 					0,7,4,8,0,0,0,0,0,
 					0,2,0,5,0,0,0,0,0,
@@ -28,9 +29,9 @@
 					0,0,0,0,0,4,0,1,0,
 					0,0,0,0,0,1,6,5,0,
 					0,0,0,0,7,0,0,0,0
-			];
+			];*/
 
-			/*[
+			[
 					 0,0,4,9,0,0,0,0,5,
 					 0,1,0,0,7,0,0,6,0,
 					 0,9,0,0,3,0,8,0,0,
@@ -40,7 +41,7 @@
 					 0,0,7,0,4,0,0,3,0,
 					 0,2,0,0,9,0,0,8,0,
 					 8,0,0,0,0,5,6,0,0 
-			];*/
+			];
 
 			var found, solvedBoxes;
 	function showHTML(){
@@ -100,12 +101,11 @@
 
 	function scanInit(grid){
 		for(var i=0; i<grid.length; i++){
-			if(!grid[i]){
+			if(!grid[i] || Array.isArray(grid[i])){
 				var thisSq=getSqPos(i);
 				grid[i] = _.difference([1, 2, 3, 4, 5, 6, 7, 8, 9], _.union(getRow(thisSq.row,grid), getCol(thisSq.col,grid), getBox(thisSq.box,grid)));	
 				$('.box').eq(i).attr('title', grid[i]); 
 			}
-
 		}
 	}
 
@@ -123,6 +123,10 @@
 		update();
 	}
 
+	function next() {
+		fillIn(solvedBoxes[0].box, solvedBoxes[0].num);
+	}
+
 function scan2(){
 	var audit = [];
 	for(var i=0; i<9; i++){
@@ -136,7 +140,7 @@ function scan2(){
 	found = [];
 
 	for(var i=0; i<9; i++){
-		for(var j=0; j<9; j++){
+		for(var j=1; j<=9; j++){
 			if(audit[i].r[j]===1){
 				found.push({r:i, n:j});		
 			}
@@ -161,6 +165,10 @@ function scan2(){
 		if(found[i].b){
 			solvedBoxes.push(findInBox(found[i].b,found[i].n));
 		}
+	}
+
+	for(var i=0; i<solvedBoxes.length; i++){
+		$('.box').eq(solvedBoxes[i].box).addClass('known');
 	}
 
 }
