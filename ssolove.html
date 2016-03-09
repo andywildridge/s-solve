@@ -59,7 +59,7 @@
 				html.append(box);
 			}
 		}
-		$('body').append(html);
+		$('body').html(html);
 	}
 
 
@@ -113,6 +113,14 @@
 		showHTML();
 		scanInit(s);
 		scan2();
+		console.log(solvedBoxes);
+	}
+
+	update();
+
+	function fillIn(b,n){
+		s[b]=n;
+		update();
 	}
 
 function scan2(){
